@@ -23,8 +23,6 @@
   "env": {
     "NODE_ENV": "production",
     "CORS_ORIGIN": "https://scrawlix.abuzarifa.com",
-    "PORT": "3000",
-    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
-    "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/chromium-browser"
+    "PORT": "3000"
   }
 }

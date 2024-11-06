@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
 import CrawlerService from './services/crawler.js';
 import http from 'http';
 import WebSocketService from './services/websocket.js';
@@ -67,8 +68,14 @@ app.post('/api/generate', async (req, res) => {
     });
 
     if (format === 'pdf') {
-      // Generate PDF
-      const browser = await puppeteer.launch();
+      // Generate PDF with Chrome AWS Lambda
+      const browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
+      });
       const page = await browser.newPage();
       const html = generateHTML(pages, { fontSize, margin });
       await page.setContent(html);
