@@ -1,25 +1,25 @@
-import { WebSocketServer } from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 
 class WebSocketService {
   constructor(server) {
-    this.wss = new WebSocketServer({ server });
-    this.clients = new Map();
-    
+    this.wss = new WebSocketServer({ 
+      server,
+      path: '/ws',
+      clientTracking: true
+    });
+
     this.wss.on('connection', (ws) => {
-      const id = Math.random().toString(36).substring(7);
-      this.clients.set(id, ws);
+      console.log('Client connected');
       
       ws.on('close', () => {
-        this.clients.delete(id);
+        console.log('Client disconnected');
       });
-
-      console.log(`New WebSocket connection: ${id}`);
     });
   }
 
   broadcast(data) {
-    this.clients.forEach(client => {
-      if (client.readyState === 1) {
+    this.wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(data));
       }
     });

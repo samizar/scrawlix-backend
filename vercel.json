@@ -8,6 +8,14 @@
   ],
   "routes": [
     {
+      "src": "/ws",
+      "dest": "server.js",
+      "headers": {
+        "Upgrade": "websocket",
+        "Connection": "upgrade"
+      }
+    },
+    {
       "src": "/(.*)",
       "dest": "/server.js"
     }
