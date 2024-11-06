@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Misc
+.DS_Store
+.vercel 
