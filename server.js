@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import CrawlerService from './services/crawler.js';
 import http from 'http';
 import WebSocketService from './services/websocket.js';
 import { generateHTML } from './utils/htmlGenerator.js';
+import chromium from '@sparticuz/chromium';
 
 const app = express();
 const server = http.createServer(app);
@@ -33,14 +34,14 @@ app.get('/', (req, res) => {
 
 // PDF Generation endpoint
 app.post('/api/generate', async (req, res) => {
+  let browser;
   try {
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage'
-      ]
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     });
     
     const { 
@@ -93,6 +94,10 @@ app.post('/api/generate', async (req, res) => {
       error: 'Generation failed',
       message: error.message 
     });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 });
 
