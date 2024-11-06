@@ -23,17 +23,24 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Scrawlix API is running'
+  });
+});
+
 // PDF Generation endpoint
 app.post('/api/generate', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
+      headless: "new",
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--single-process'
-      ],
-      headless: true
+        '--disable-dev-shm-usage'
+      ]
     });
     
     const { 
