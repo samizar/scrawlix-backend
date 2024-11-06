@@ -1,14 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import puppeteer from 'puppeteer';
-import chromium from 'chrome-aws-lambda';
 import CrawlerService from './services/crawler.js';
 import http from 'http';
 import WebSocketService from './services/websocket.js';
 import { generateHTML } from './utils/htmlGenerator.js';
 
 const app = express();
-const port = 3000;
 const server = http.createServer(app);
 const wsService = new WebSocketService(server);
 
@@ -22,41 +20,36 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.send('Scrawlix API is running');
-});
-
-// Helper function to get filename
-function getFilenameFromUrl(url) {
-  try {
-    const urlObj = new URL(url);
-    const domain = urlObj.hostname.replace('www.', '');
-    return domain.replace(/\./g, '-');
-  } catch (error) {
-    return 'website';
-  }
-}
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // PDF Generation endpoint
 app.post('/api/generate', async (req, res) => {
-  const { 
-    url, 
-    format,
-    crawlDepth, 
-    maxPages,
-    fontSize, 
-    margin,
-    includePaths,
-    excludePaths 
-  } = req.body;
-  
-  const crawler = new CrawlerService();
-  const filename = getFilenameFromUrl(url);
-  
   try {
+    const browser = await puppeteer.launch({
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--single-process'
+      ],
+      headless: true
+    });
+    
+    const { 
+      url, 
+      format,
+      crawlDepth, 
+      maxPages,
+      fontSize, 
+      margin,
+      includePaths,
+      excludePaths 
+    } = req.body;
+    
+    const crawler = new CrawlerService();
+    const filename = getFilenameFromUrl(url);
+    
     // Start crawling
     const pages = await crawler.crawl(url, {
       crawlDepth,
@@ -69,14 +62,6 @@ app.post('/api/generate', async (req, res) => {
 
     if (format === 'pdf') {
       // Generate PDF
-      const browser = await puppeteer.launch({
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage'
-        ],
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'
-      });
       const page = await browser.newPage();
       const html = generateHTML(pages, { fontSize, margin });
       await page.setContent(html);
@@ -97,7 +82,6 @@ app.post('/api/generate', async (req, res) => {
     
   } catch (error) {
     console.error('Error:', error);
-    wsService.broadcast({ type: 'error', data: error.message });
     res.status(500).json({ 
       error: 'Generation failed',
       message: error.message 
@@ -121,7 +105,11 @@ function getPDFMargins(margin) {
   };
 }
 
-// Start server
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-}); 
+// Only start server if not in Vercel
+if (process.env.NODE_ENV !== 'production') {
+  server.listen(3000, () => {
+    console.log('Server running on port 3000');
+  });
+}
+
+export default app; 
