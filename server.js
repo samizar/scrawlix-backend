@@ -117,6 +117,17 @@ function getPDFMargins(margin) {
   };
 }
 
+function getFilenameFromUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.replace(/\./g, '-');
+    const pathname = urlObj.pathname.replace(/\//g, '-');
+    return `${hostname}${pathname}`.replace(/[^a-zA-Z0-9-]/g, '');
+  } catch (error) {
+    return 'download';
+  }
+}
+
 // Only start server if not in Vercel
 if (process.env.NODE_ENV !== 'production') {
   server.listen(3000, () => {
