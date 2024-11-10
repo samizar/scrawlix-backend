@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { setupStatusRoute } from './routes/statusPage.js';
 import puppeteer from 'puppeteer-core';
 import CrawlerService from './services/crawler.js';
 import http from 'http';
